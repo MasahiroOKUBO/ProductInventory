@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="array_temperature_options">
+        <item>@string/temperature_normal</item>
+        <item>@string/temperature_cold</item>
+        <item>@string/temperature_freeze</item>
+    </string-array>
+</resources>

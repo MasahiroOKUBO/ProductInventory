@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ProductInventory</string>
+    <string name="action_insert_dummy_data">Insert Dummy Entry</string>
+    <string name="action_delete_all_entries">Delete All Entries</string>
+    <string name="empty_view_title_text">It\'s a EMPTY here&#8230;&#8230;</string>
+    <string name="empty_view_subtitle_text">Get started by adding a PRODUCT</string>
+    <string name="editor_activity_title_new_product">Add a Entry</string>
+    <string name="editor_activity_title_edit_product">Edit a Entry</string>
+    <string name="editor_insert_entry_successful">editor_insert_entry_successful</string>
+    <string name="editor_insert_entry_failed">editor_insert_entry_failed</string>
+    <string name="editor_update_entry_successful">editor_update_entry_successful</string>
+    <string name="editor_update_entry_failed">editor_update_entry_failed</string>
+    <string name="editor_delete_entry_successful">editor_delete_entry_successful</string>
+    <string name="editor_delete_entry_failed">editor_delete_entry_failed</string>
+    <string name="unsaved_changes_dialog_msg">Discard your changes and quit editing?</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="discard">Discard</string>
+    <string name="keep_editing">Keep Editing</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_dialog_msg">Delete this Entry?</string>
+    <string name="delete_all_dialog_msg">You Deleting All Entry. Are you Serious?</string>
+    <string name="container_overview_label">OVERVIEW</string>
+    <string name="container_detail_label">DETAIL</string>
+    <string name="container_tempertature_label">HOW TO STORE</string>
+    <string name="hint_product_name">Name</string>
+    <string name="hint_product_price">Price</string>
+    <string name="hint_product_quantity">Quantity</string>
+    <string name="hint_product_description">Description</string>
+    <string name="hint_product_supplier">Supplier</string>
+    <string name="unit_currency">$</string>
+    <string name="temperature_normal">NOMAL</string>
+    <string name="temperature_cold">COLD</string>
+    <string name="temperature_freeze">FREEZE</string>
+    <string name="unknown_supplier">unknown_supplier</string>
+    <string name="list_item_name_title">Product Name</string>
+    <string name="list_item_supplier_title">Supplier</string>
+    <string name="list_item_price_title">Price</string>
+    <string name="list_item_quantity_title">Quantity</string>
+</resources>
+

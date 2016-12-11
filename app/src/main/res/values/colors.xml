@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <!-- The app branding color for the app bar -->
+    <color name="colorPrimary">#f0d74b</color>
+    <color name="colorPrimaryDark">#997208</color>
+    <color name="colorAccent">#c7530a</color>
+
+    <!-- Primary color for the editor -->
+    <color name="editorColorPrimary">#032d5b</color>
+    <color name="editorColorPrimaryDark">#011121</color>
+
+    <!-- List item color -->
+    <color name="list_item_title_color">#030c15</color>
+    <color name="list_item_value_color">#5b2603</color>
+
+</resources>
