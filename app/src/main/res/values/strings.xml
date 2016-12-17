@@ -25,6 +25,8 @@
     <string name="container_overview_label">OVERVIEW</string>
     <string name="container_detail_label">DETAIL</string>
     <string name="container_tempertature_label">HOW TO STORE</string>
+    <string name="container_image_label">Image</string>
+
     <string name="hint_product_name">Name</string>
     <string name="hint_product_price">Price</string>
     <string name="hint_product_quantity">Quantity</string>
@@ -39,5 +41,7 @@
     <string name="list_item_supplier_title">Supplier</string>
     <string name="list_item_price_title">Price</string>
     <string name="list_item_quantity_title">Quantity</string>
+
+
 </resources>
 

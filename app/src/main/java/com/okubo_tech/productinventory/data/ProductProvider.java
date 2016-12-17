@@ -2,7 +2,7 @@ package com.okubo_tech.productinventory.data;
 
 /**
  * Created by okubo on 2016/12/10.
- * <p>
+ *
  * content provider
  */
 
@@ -21,13 +21,21 @@ import com.okubo_tech.productinventory.data.ProductContract.ProductEntry;
 public class ProductProvider extends ContentProvider {
 
     public static final String LOG_TAG = ProductProvider.class.getSimpleName();
+
     private static final int PRODUCTS = 100;
     private static final int PRODUCT_ID = 101;
+
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
-        sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS, PRODUCTS);
-        sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS + "/#", PRODUCT_ID);
+        sUriMatcher.addURI(
+                ProductContract.AUTHORITY,
+                ProductContract.PATH_PRODUCT,
+                PRODUCTS);
+        sUriMatcher.addURI(
+                ProductContract.AUTHORITY,
+                ProductContract.PATH_PRODUCT + "/#",
+                PRODUCT_ID);
     }
 
     private ProductDbHelper mDbHelper;
@@ -48,12 +56,26 @@ public class ProductProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
         switch (match) {
             case PRODUCTS:
-                cursor = db.query(ProductEntry.TABLE_NAME, projection, selection, args, null, null, order);
+                cursor = db.query(
+                        ProductEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        args,
+                        null,
+                        null,
+                        order);
                 break;
             case PRODUCT_ID:
                 selection = ProductEntry._ID + "=?";
                 args = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                cursor = db.query(ProductEntry.TABLE_NAME, projection, selection, args, null, null, order);
+                cursor = db.query(
+                        ProductEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        args,
+                        null,
+                        null,
+                        order);
                 break;
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
@@ -65,11 +87,11 @@ public class ProductProvider extends ContentProvider {
     }
 
     @Override
-    public Uri insert(Uri uri, ContentValues contentValues) {
+    public Uri insert(Uri uri, ContentValues values) {
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PRODUCTS:
-                return insertProduct(uri, contentValues);
+                return insertProduct(uri, values);
             default:
                 throw new IllegalArgumentException("Insertion is not supported for " + uri);
         }
@@ -99,12 +121,18 @@ public class ProductProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PRODUCTS:
-                rowsDeleted = database.delete(ProductEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(
+                        ProductEntry.TABLE_NAME,
+                        selection,
+                        selectionArgs);
                 break;
             case PRODUCT_ID:
                 selection = ProductEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                rowsDeleted = database.delete(ProductEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = database.delete(
+                        ProductEntry.TABLE_NAME,
+                        selection,
+                        selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
@@ -131,6 +159,7 @@ public class ProductProvider extends ContentProvider {
     }
 
     /** helper **/
+
     private Uri insertProduct(Uri uri, ContentValues values) {
 
         /** sanity check **/
@@ -138,6 +167,7 @@ public class ProductProvider extends ContentProvider {
         Integer price = values.getAsInteger(ProductEntry.COLUMN_PRODUCT_PRICE);
         Integer quantity = values.getAsInteger(ProductEntry.COLUMN_PRODUCT_QUANTITY);
         String supplier = values.getAsString(ProductEntry.COLUMN_PRODUCT_SUPPLIER);
+        String supplier_email = values.getAsString(ProductEntry.COLUMN_PRODUCT_SUPPLIER_EMAIL);
         String description = values.getAsString(ProductEntry.COLUMN_PRODUCT_DESCRIPTION);
         Integer temperature = values.getAsInteger(ProductEntry.COLUMN_PRODUCT_TEMPERATURE);
 
@@ -153,10 +183,16 @@ public class ProductProvider extends ContentProvider {
         if (temperature == null || !ProductEntry.isValidTemperature(temperature)) {
             throw new IllegalArgumentException("requires valid temperature");
         }
+        if (supplier_email == null) {
+            throw new IllegalArgumentException("requires a supplier_email");
+        }
 
         /** Insert **/
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
-        long id = db.insert(ProductEntry.TABLE_NAME, null, values);
+        long id = db.insert(
+                ProductEntry.TABLE_NAME,
+                null,
+                values);
         if (id == -1) {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
@@ -206,7 +242,11 @@ public class ProductProvider extends ContentProvider {
 
         /** update **/
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
-        int rowsUpdated = database.update(ProductEntry.TABLE_NAME, values, selection, selectionArgs);
+        int rowsUpdated = database.update(
+                ProductEntry.TABLE_NAME,
+                values,
+                selection,
+                selectionArgs);
 
         /** notify Contents Resolver (if updated) **/
         if (rowsUpdated != 0) {
@@ -217,5 +257,7 @@ public class ProductProvider extends ContentProvider {
         return rowsUpdated;
     }
 
-}
 
+
+
+}

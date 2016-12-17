@@ -9,7 +9,10 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -20,8 +23,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.okubo_tech.productinventory.data.ProductContract.ProductEntry;
+
+import java.io.ByteArrayOutputStream;
 
 
 public class CatalogActivity extends AppCompatActivity implements
@@ -93,7 +99,8 @@ public class CatalogActivity extends AppCompatActivity implements
                 ProductEntry.COLUMN_PRODUCT_QUANTITY,
                 ProductEntry.COLUMN_PRODUCT_SUPPLIER,
                 ProductEntry.COLUMN_PRODUCT_DESCRIPTION,
-                ProductEntry.COLUMN_PRODUCT_TEMPERATURE};
+                ProductEntry.COLUMN_PRODUCT_TEMPERATURE,
+                ProductEntry.COLUMN_PRODUCT_IMAGE};
         return new CursorLoader(this, ProductEntry.CONTENT_URI, projection, null, null, null);
     }
 
@@ -116,10 +123,13 @@ public class CatalogActivity extends AppCompatActivity implements
         values.put(ProductEntry.COLUMN_PRODUCT_PRICE, 120);
         values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 7);
         values.put(ProductEntry.COLUMN_PRODUCT_SUPPLIER, "KIRIN");
+        values.put(ProductEntry.COLUMN_PRODUCT_SUPPLIER_EMAIL, "okubomasahiro3@gmail.com");
         values.put(ProductEntry.COLUMN_PRODUCT_DESCRIPTION, "Very Tasty.");
         values.put(ProductEntry.COLUMN_PRODUCT_TEMPERATURE, ProductEntry.TEMPERATURE_COLD);
 
-        Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
+        Uri newUri = getContentResolver().insert(
+                ProductEntry.CONTENT_URI,
+                values);
         Log.v(LOG_TAG, String.valueOf(newUri));
     }
 
@@ -147,4 +157,6 @@ public class CatalogActivity extends AppCompatActivity implements
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
+
+
 }

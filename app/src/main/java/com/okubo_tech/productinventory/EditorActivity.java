@@ -13,9 +13,14 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -25,11 +30,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import com.okubo_tech.productinventory.data.ProductContract.ProductEntry;
+
+import java.io.ByteArrayOutputStream;
 
 
 public class EditorActivity extends AppCompatActivity implements
@@ -38,14 +46,25 @@ public class EditorActivity extends AppCompatActivity implements
     /**
      * Member
      */
+    private final static String LOG_TAG = EditorActivity.class.getSimpleName();
+
     private static final int EXISTING_PRODUCT_LOADER = 0;
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+
     private Uri mCurrentProductUri;
+
     private EditText mNameEditText;
     private EditText mPriceEditText;
     private EditText mQuantityEditText;
     private EditText mSupplierEditText;
+    private EditText mSupplierEmailEditText;
     private EditText mDescriptionEditText;
     private Spinner mTemperatureSpinner;
+    private ImageView mImageImageView;
+
+    private Button mOrderButton;
+    private Button mCameraButton;
+
     private int mTemperature = ProductEntry.TEMPERATURE_NOMAL;
     private boolean mProductHasChanged = false;
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
@@ -66,6 +85,7 @@ public class EditorActivity extends AppCompatActivity implements
         Intent intent = getIntent();
         mCurrentProductUri = intent.getData();
 
+        /** New or Edit**/
         if (mCurrentProductUri == null) {
             setTitle(getString(R.string.editor_activity_title_new_product));
             invalidateOptionsMenu();
@@ -74,23 +94,71 @@ public class EditorActivity extends AppCompatActivity implements
             getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
         }
 
-        // Find views
+        /** Find views **/
         mNameEditText = (EditText) findViewById(R.id.edit_product_name);
         mPriceEditText = (EditText) findViewById(R.id.edit_product_price);
         mQuantityEditText = (EditText) findViewById(R.id.edit_product_quantity);
         mSupplierEditText = (EditText) findViewById(R.id.edit_product_supplier);
+        mSupplierEmailEditText = (EditText) findViewById(R.id.edit_product_supplier_email);
         mDescriptionEditText = (EditText) findViewById(R.id.edit_product_description);
         mTemperatureSpinner = (Spinner) findViewById(R.id.edit_product_temperature_spinner);
+        mImageImageView = (ImageView) findViewById(R.id.product_image);
+        mOrderButton = (Button) findViewById(R.id.ordre_button);
+        mCameraButton = (Button) findViewById(R.id.camera_button);
 
-        // set listener
+        /** set listener **/
         mNameEditText.setOnTouchListener(mTouchListener);
         mPriceEditText.setOnTouchListener(mTouchListener);
         mQuantityEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText.setOnTouchListener(mTouchListener);
+        mSupplierEmailEditText.setOnTouchListener(mTouchListener);
         mDescriptionEditText.setOnTouchListener(mTouchListener);
         mTemperatureSpinner.setOnTouchListener(mTouchListener);
+        mImageImageView.setOnTouchListener(mTouchListener);
 
+
+
+        mOrderButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(EditorActivity.this, "mOrderButton", Toast.LENGTH_SHORT).show();
+                String productSupplierEmail = mSupplierEmailEditText.getText().toString();
+
+                Intent intent = new Intent(Intent.ACTION_SENDTO);
+                intent.setData(Uri.parse("mailto:" + productSupplierEmail));
+                intent.putExtra(Intent.EXTRA_SUBJECT, "ORDER");
+                intent.putExtra(Intent.EXTRA_TEXT, "some message here.");
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
+
+        mCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(EditorActivity.this, "mImageImageView", Toast.LENGTH_SHORT).show();
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            }
+        });
+
+        /** set Spinner **/
         setupSpinner();
+
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            mImageImageView.setImageBitmap(imageBitmap);
+            saveProduct();
+        }
     }
 
     @Override
@@ -165,8 +233,10 @@ public class EditorActivity extends AppCompatActivity implements
                 ProductEntry.COLUMN_PRODUCT_PRICE,
                 ProductEntry.COLUMN_PRODUCT_QUANTITY,
                 ProductEntry.COLUMN_PRODUCT_SUPPLIER,
+                ProductEntry.COLUMN_PRODUCT_SUPPLIER_EMAIL,
                 ProductEntry.COLUMN_PRODUCT_DESCRIPTION,
-                ProductEntry.COLUMN_PRODUCT_TEMPERATURE};
+                ProductEntry.COLUMN_PRODUCT_TEMPERATURE,
+                ProductEntry.COLUMN_PRODUCT_IMAGE};
 
         return new CursorLoader(this, mCurrentProductUri, projection, null, null, null);
     }
@@ -176,26 +246,33 @@ public class EditorActivity extends AppCompatActivity implements
         if (cursor == null || cursor.getCount() < 1) {
             return;
         }
-
         if (cursor.moveToFirst()) {
+            /** index **/
             int nameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME);
             int priceColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PRICE);
             int quantityColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_QUANTITY);
             int supplierColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_SUPPLIER);
+            int supplierEmailColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_SUPPLIER_EMAIL);
             int descriptionColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_DESCRIPTION);
             int temperatureColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_TEMPERATURE);
+            int imageColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_IMAGE);
 
+            /** value **/
             String productName = cursor.getString(nameColumnIndex);
             int productPrice = cursor.getInt(priceColumnIndex);
             int productQuantity = cursor.getInt(quantityColumnIndex);
             String productSupplier = cursor.getString(supplierColumnIndex);
+            String productSupplierEmail = cursor.getString(supplierEmailColumnIndex);
             String productDescription = cursor.getString(descriptionColumnIndex);
             int productTemperature = cursor.getInt(temperatureColumnIndex);
+            byte[] productImageByte = cursor.getBlob(imageColumnIndex);
 
+            /** set value **/
             mNameEditText.setText(productName);
             mPriceEditText.setText(String.valueOf(productPrice));
             mQuantityEditText.setText(String.valueOf(productQuantity));
             mSupplierEditText.setText(productSupplier);
+            mSupplierEmailEditText.setText(productSupplierEmail);
             mDescriptionEditText.setText(productDescription);
 
             switch (productTemperature) {
@@ -209,6 +286,14 @@ public class EditorActivity extends AppCompatActivity implements
                     mTemperatureSpinner.setSelection(0);
                     break;
             }
+
+            // if image exist, set image. else set def image.
+            Bitmap productImage = BitmapFactory.decodeResource(getResources(), R.drawable.ic_empty_store);
+            if (productImageByte != null){
+                productImage = BitmapFactory.decodeByteArray(productImageByte, 0, productImageByte.length);
+            }
+            mImageImageView.setImageBitmap(productImage);
+
         }
     }
 
@@ -218,8 +303,11 @@ public class EditorActivity extends AppCompatActivity implements
         mPriceEditText.setText("");
         mQuantityEditText.setText("");
         mSupplierEditText.setText("");
+        mSupplierEmailEditText.setText("");
         mDescriptionEditText.setText("");
         mTemperatureSpinner.setSelection(0);
+        Bitmap productImage = BitmapFactory.decodeResource(getResources(), R.drawable.ic_empty_store);
+        mImageImageView.setImageBitmap(productImage);
     }
 
     /**
@@ -311,16 +399,18 @@ public class EditorActivity extends AppCompatActivity implements
         String priceString = mPriceEditText.getText().toString().trim();
         String quantityString = mQuantityEditText.getText().toString().trim();
         String supplierString = mSupplierEditText.getText().toString().trim();
+        String supplierEmailString = mSupplierEmailEditText.getText().toString().trim();
         String descriptionString = mDescriptionEditText.getText().toString().trim();
+        Bitmap imageBitmap = ((BitmapDrawable)mImageImageView.getDrawable()).getBitmap();
 
         /** sanity check **/
         if (mCurrentProductUri == null &&
-                TextUtils.isEmpty(nameString) &&
-                TextUtils.isEmpty(priceString) && TextUtils.isEmpty(quantityString) &&
-                TextUtils.isEmpty(supplierString) && TextUtils.isEmpty(descriptionString) &&
-                mTemperature == ProductEntry.TEMPERATURE_NOMAL) {
+                TextUtils.isEmpty(nameString) || TextUtils.isEmpty(priceString) ||
+                TextUtils.isEmpty(quantityString) || TextUtils.isEmpty(supplierEmailString)) {
+            Toast.makeText(this, "Not Saved. Require Name, Price, Quantity, Email !!", Toast.LENGTH_LONG).show();
             return;
         }
+
         int price = 0;
         if (!TextUtils.isEmpty(priceString)) {
             price = Integer.parseInt(priceString);
@@ -331,15 +421,20 @@ public class EditorActivity extends AppCompatActivity implements
             quantity = Integer.parseInt(quantityString);
         }
 
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        imageBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] bytes = baos.toByteArray();
+
         /** Create a ContentValues object **/
         ContentValues values = new ContentValues();
         values.put(ProductEntry.COLUMN_PRODUCT_NAME, nameString);
         values.put(ProductEntry.COLUMN_PRODUCT_PRICE, price);
         values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, quantity);
         values.put(ProductEntry.COLUMN_PRODUCT_SUPPLIER, supplierString);
+        values.put(ProductEntry.COLUMN_PRODUCT_SUPPLIER_EMAIL, supplierEmailString);
         values.put(ProductEntry.COLUMN_PRODUCT_DESCRIPTION, descriptionString);
         values.put(ProductEntry.COLUMN_PRODUCT_TEMPERATURE, mTemperature);
-
+        values.put(ProductEntry.COLUMN_PRODUCT_IMAGE, bytes);
 
         if (mCurrentProductUri == null) {
             Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
